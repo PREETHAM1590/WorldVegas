@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Volume2, VolumeX, Info } from 'lucide-react';
 import { useUserStore } from '@/stores/userStore';
@@ -9,6 +9,7 @@ import { usePracticeModeStore } from '@/stores/practiceModeStore';
 import { useToast } from '@/components/ui/Toast';
 import { useSound, useSoundSettings } from '@/hooks/useSound';
 import { PracticeModeBanner } from '@/components/ui/PracticeMode';
+import { generateClientSeed } from '@/lib/provablyFair';
 import { cn } from '@/lib/utils';
 
 const BET_AMOUNTS = [0.10, 0.50, 1.00, 5.00, 10.00];
@@ -91,10 +92,37 @@ export function DiceGame() {
   const [showRules, setShowRules] = useState(false);
   const [dice1, setDice1] = useState(1);
   const [dice2, setDice2] = useState(1);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [clientSeed, setClientSeed] = useState(generateClientSeed());
 
   // Calculate win chance and multiplier
   const winChance = prediction === 'over' ? (100 - targetNumber) : targetNumber;
   const multiplier = Math.floor((98 / winChance) * 100) / 100; // 2% house edge
+
+  // Initialize game session
+  const initSession = useCallback(async () => {
+    try {
+      const response = await fetch('/api/game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: 'user',
+          gameType: 'dice',
+          clientSeed,
+        }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        setSessionId(result.sessionId);
+      }
+    } catch (error) {
+      console.error('Failed to init session:', error);
+    }
+  }, [clientSeed]);
+
+  useEffect(() => {
+    initSession();
+  }, [initSession]);
 
   const roll = async () => {
     if (isRolling) return;
@@ -117,7 +145,7 @@ export function DiceGame() {
         betAmount,
         currency,
         timestamp: Date.now(),
-        clientSeed: '',
+        clientSeed,
       });
     }
 
@@ -137,28 +165,24 @@ export function DiceGame() {
       }
     }, 100);
 
-    // Generate result (0-100)
-    const rollResult = Math.floor(Math.random() * 100) + 1;
+    // Practice mode - use local random
+    if (isPracticeMode) {
+      const rollResult = Math.floor(Math.random() * 100) + 1;
 
-    // Wait for animation
-    setTimeout(() => {
-      clearInterval(rollInterval);
+      setTimeout(() => {
+        clearInterval(rollInterval);
+        const d1 = Math.floor(Math.random() * 6) + 1;
+        const d2 = Math.floor(Math.random() * 6) + 1;
+        setDice1(d1);
+        setDice2(d2);
+        setResult(rollResult);
+        setIsRolling(false);
+        playSound('diceHit');
 
-      // Set final dice values based on result
-      const d1 = Math.floor(Math.random() * 6) + 1;
-      const d2 = Math.floor(Math.random() * 6) + 1;
-      setDice1(d1);
-      setDice2(d2);
-      setResult(rollResult);
-      setIsRolling(false);
-      playSound('diceHit');
+        const won = prediction === 'over'
+          ? rollResult > targetNumber
+          : rollResult < targetNumber;
 
-      const won = prediction === 'over'
-        ? rollResult > targetNumber
-        : rollResult < targetNumber;
-
-      if (isPracticeMode) {
-        // Practice mode - just record stats
         recordPracticeResult(won);
         if (won) {
           setShowWin(true);
@@ -169,49 +193,97 @@ export function DiceGame() {
           playSound('lose');
           showToast(`Rolled ${rollResult}. Better luck next time! (Practice)`, 'error');
         }
+        setClientSeed(generateClientSeed());
+      }, 1800);
+      return;
+    }
+
+    // Real mode - call provably fair API
+    try {
+      const response = await fetch('/api/game', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          clientSeed,
+          betAmount,
+          gameData: {
+            targetNumber,
+            prediction,
+          },
+        }),
+      });
+
+      const apiResult = await response.json();
+
+      if (apiResult.success && apiResult.outcome) {
+        const rollResult = apiResult.outcome.roll ?? (apiResult.outcome % 100) + 1;
+
+        setTimeout(() => {
+          clearInterval(rollInterval);
+          const d1 = Math.floor(Math.random() * 6) + 1;
+          const d2 = Math.floor(Math.random() * 6) + 1;
+          setDice1(d1);
+          setDice2(d2);
+          setResult(rollResult);
+          setIsRolling(false);
+          playSound('diceHit');
+          setPendingGame(null);
+
+          const won = prediction === 'over'
+            ? rollResult > targetNumber
+            : rollResult < targetNumber;
+
+          if (won) {
+            const winAmount = betAmount * multiplier;
+            addBalance(currency, winAmount);
+            setShowWin(true);
+            playSound('win');
+            showToast(`You won ${winAmount.toFixed(2)} ${currency.toUpperCase()}!`, 'success');
+            setTimeout(() => setShowWin(false), 2000);
+
+            addResult({
+              id: crypto.randomUUID(),
+              game: 'dice',
+              betAmount,
+              currency,
+              outcome: 'win',
+              payout: winAmount,
+              timestamp: Date.now(),
+              serverSeed: apiResult.serverSeed || '',
+              clientSeed,
+              nonce: apiResult.nonce || 0,
+            });
+          } else {
+            playSound('lose');
+            showToast(`Rolled ${rollResult}. Better luck next time!`, 'error');
+
+            addResult({
+              id: crypto.randomUUID(),
+              game: 'dice',
+              betAmount,
+              currency,
+              outcome: 'lose',
+              payout: 0,
+              timestamp: Date.now(),
+              serverSeed: apiResult.serverSeed || '',
+              clientSeed,
+              nonce: apiResult.nonce || 0,
+            });
+          }
+          setClientSeed(generateClientSeed());
+        }, 1800);
       } else {
-        // Real mode - update balance
-        setPendingGame(null);
-
-        if (won) {
-          const winAmount = betAmount * multiplier;
-          addBalance(currency, winAmount);
-          setShowWin(true);
-          playSound('win');
-          showToast(`You won ${winAmount.toFixed(2)} ${currency.toUpperCase()}!`, 'success');
-          setTimeout(() => setShowWin(false), 2000);
-
-          addResult({
-            id: crypto.randomUUID(),
-            game: 'dice',
-            betAmount,
-            currency,
-            outcome: 'win',
-            payout: winAmount,
-            timestamp: Date.now(),
-            serverSeed: '',
-            clientSeed: '',
-            nonce: 0,
-          });
-        } else {
-          playSound('lose');
-          showToast(`Rolled ${rollResult}. Better luck next time!`, 'error');
-
-          addResult({
-            id: crypto.randomUUID(),
-            game: 'dice',
-            betAmount,
-            currency,
-            outcome: 'lose',
-            payout: 0,
-            timestamp: Date.now(),
-            serverSeed: '',
-            clientSeed: '',
-            nonce: 0,
-          });
-        }
+        throw new Error(apiResult.error || 'Game failed');
       }
-    }, 1800);
+    } catch (error) {
+      console.error('Dice roll error:', error);
+      clearInterval(rollInterval);
+      setIsRolling(false);
+      addBalance(currency, betAmount);
+      setPendingGame(null);
+      showToast('Connection error. Bet refunded.', 'error');
+    }
   };
 
   return (

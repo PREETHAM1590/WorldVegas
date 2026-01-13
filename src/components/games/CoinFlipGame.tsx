@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Volume2, VolumeX, Info, Sparkles } from 'lucide-react';
 import { useUserStore } from '@/stores/userStore';
@@ -9,6 +9,7 @@ import { usePracticeModeStore } from '@/stores/practiceModeStore';
 import { useToast } from '@/components/ui/Toast';
 import { useSound, useSoundSettings } from '@/hooks/useSound';
 import { PracticeModeBanner } from '@/components/ui/PracticeMode';
+import { generateClientSeed } from '@/lib/provablyFair';
 import { cn } from '@/lib/utils';
 
 const BET_AMOUNTS = [0.10, 0.50, 1.00, 5.00, 10.00];
@@ -255,6 +256,33 @@ export function CoinFlipGame() {
   const [showWin, setShowWin] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [flipCount, setFlipCount] = useState(0);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [clientSeed, setClientSeed] = useState(generateClientSeed());
+
+  // Initialize game session
+  const initSession = useCallback(async () => {
+    try {
+      const response = await fetch('/api/game', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: 'user',
+          gameType: 'coinflip',
+          clientSeed,
+        }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        setSessionId(result.sessionId);
+      }
+    } catch (error) {
+      console.error('Failed to init session:', error);
+    }
+  }, [clientSeed]);
+
+  useEffect(() => {
+    initSession();
+  }, [initSession]);
 
   const flip = async () => {
     if (isFlipping) return;
@@ -277,7 +305,7 @@ export function CoinFlipGame() {
         betAmount,
         currency,
         timestamp: Date.now(),
-        clientSeed: '',
+        clientSeed,
       });
     }
 
@@ -287,19 +315,16 @@ export function CoinFlipGame() {
     setFlipCount(prev => prev + 1);
     playSound('coinFlip');
 
-    // Simulate coin flip (50/50)
-    const flipResult = Math.random() < 0.5 ? 'heads' : 'tails';
+    // Practice mode - use local random
+    if (isPracticeMode) {
+      const flipResult = Math.random() < 0.5 ? 'heads' : 'tails';
 
-    // Wait for animation
-    setTimeout(() => {
-      setResult(flipResult);
-      setIsFlipping(false);
-      playSound('coinLand');
+      setTimeout(() => {
+        setResult(flipResult);
+        setIsFlipping(false);
+        playSound('coinLand');
 
-      const won = flipResult === selectedSide;
-
-      if (isPracticeMode) {
-        // Practice mode - just record stats
+        const won = flipResult === selectedSide;
         recordPracticeResult(won);
         if (won) {
           setShowWin(true);
@@ -310,49 +335,92 @@ export function CoinFlipGame() {
           playSound('lose');
           showToast('Better luck next time! (Practice)', 'error');
         }
+        setClientSeed(generateClientSeed());
+      }, 2000);
+      return;
+    }
+
+    // Real mode - call provably fair API
+    try {
+      const response = await fetch('/api/game', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          clientSeed,
+          betAmount,
+          gameData: {
+            selectedSide,
+          },
+        }),
+      });
+
+      const apiResult = await response.json();
+
+      if (apiResult.success && apiResult.outcome !== undefined) {
+        // Outcome is 0 or 1, convert to heads/tails
+        const outcomeValue = typeof apiResult.outcome === 'number'
+          ? apiResult.outcome
+          : apiResult.outcome.result ?? 0;
+        const flipResult: 'heads' | 'tails' = outcomeValue % 2 === 0 ? 'heads' : 'tails';
+
+        setTimeout(() => {
+          setResult(flipResult);
+          setIsFlipping(false);
+          playSound('coinLand');
+          setPendingGame(null);
+
+          const won = flipResult === selectedSide;
+
+          if (won) {
+            const winAmount = betAmount * 1.95;
+            addBalance(currency, winAmount);
+            setShowWin(true);
+            playSound('win');
+            showToast(`You won ${winAmount.toFixed(2)} ${currency.toUpperCase()}!`, 'success');
+            setTimeout(() => setShowWin(false), 2000);
+
+            addResult({
+              id: crypto.randomUUID(),
+              game: 'coinflip',
+              betAmount,
+              currency,
+              outcome: 'win',
+              payout: winAmount,
+              timestamp: Date.now(),
+              serverSeed: apiResult.serverSeed || '',
+              clientSeed,
+              nonce: apiResult.nonce || 0,
+            });
+          } else {
+            playSound('lose');
+            showToast('Better luck next time!', 'error');
+
+            addResult({
+              id: crypto.randomUUID(),
+              game: 'coinflip',
+              betAmount,
+              currency,
+              outcome: 'lose',
+              payout: 0,
+              timestamp: Date.now(),
+              serverSeed: apiResult.serverSeed || '',
+              clientSeed,
+              nonce: apiResult.nonce || 0,
+            });
+          }
+          setClientSeed(generateClientSeed());
+        }, 2000);
       } else {
-        // Real mode - update balance
-        setPendingGame(null);
-
-        if (won) {
-          const winAmount = betAmount * 1.95;
-          addBalance(currency, winAmount);
-          setShowWin(true);
-          playSound('win');
-          showToast(`You won ${winAmount.toFixed(2)} ${currency.toUpperCase()}!`, 'success');
-          setTimeout(() => setShowWin(false), 2000);
-
-          addResult({
-            id: crypto.randomUUID(),
-            game: 'coinflip',
-            betAmount,
-            currency,
-            outcome: 'win',
-            payout: winAmount,
-            timestamp: Date.now(),
-            serverSeed: '',
-            clientSeed: '',
-            nonce: 0,
-          });
-        } else {
-          playSound('lose');
-          showToast('Better luck next time!', 'error');
-
-          addResult({
-            id: crypto.randomUUID(),
-            game: 'coinflip',
-            betAmount,
-            currency,
-            outcome: 'lose',
-            payout: 0,
-            timestamp: Date.now(),
-            serverSeed: '',
-            clientSeed: '',
-            nonce: 0,
-          });
-        }
+        throw new Error(apiResult.error || 'Game failed');
       }
-    }, 2000);
+    } catch (error) {
+      console.error('Coin flip error:', error);
+      setIsFlipping(false);
+      addBalance(currency, betAmount);
+      setPendingGame(null);
+      showToast('Connection error. Bet refunded.', 'error');
+    }
   };
 
   return (
