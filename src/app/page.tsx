@@ -144,15 +144,32 @@ export default function HomePage() {
               priority
             />
           </motion.div>
-          <h1 className="text-3xl font-bold mb-2 font-display">
-            Welcome to{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8B5CF6] via-[#A78BFA] to-[#D4AF37]">
-              WorldVegas
-            </span>
-          </h1>
-          <p className="text-[#A3A3A3] text-sm">
-            The first provably fair casino for World App
-          </p>
+          {/* Show different message based on login status */}
+          {hasHydrated && user ? (
+            <>
+              <h1 className="text-3xl font-bold mb-2 font-display">
+                Welcome back,{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8B5CF6] via-[#A78BFA] to-[#D4AF37]">
+                  Player
+                </span>
+              </h1>
+              <p className="text-[#A3A3A3] text-sm">
+                Ready to win big today?
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-3xl font-bold mb-2 font-display">
+                Welcome to{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8B5CF6] via-[#A78BFA] to-[#D4AF37]">
+                  WorldVegas
+                </span>
+              </h1>
+              <p className="text-[#A3A3A3] text-sm">
+                The first provably fair casino for World App
+              </p>
+            </>
+          )}
         </motion.div>
 
         {/* Auth Section - Show when not logged in AND hydrated */}

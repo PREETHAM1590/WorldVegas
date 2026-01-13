@@ -153,20 +153,23 @@ export function VIPHeroCard() {
   );
 }
 
-// Welcome Hero Card
+// Welcome Hero Card - For logged-in users
 export function WelcomeHeroCard() {
   return (
     <HeroCard
       variant="gold"
-      title="START WINNING NOW!"
-      description="100% DEPOSIT MATCH UP TO $1,000."
-      buttonText="Register instantly"
-      buttonHref="/profile"
-      className="min-h-[240px] text-center items-center justify-center"
+      title="YOUR LUCK AWAITS"
+      description="Play now and win big on your favorite games!"
+      buttonText="Play Games"
+      buttonHref="/games"
+      className="min-h-[180px] text-center items-center justify-center"
     >
       {/* Roulette wheel decoration */}
-      <div className="absolute left-1/2 top-8 -translate-x-1/2 text-6xl animate-spin-slow">
-        🎰
+      <div className="absolute right-4 top-4 text-4xl animate-float">
+        🎲
+      </div>
+      <div className="absolute right-12 bottom-8 text-3xl animate-float" style={{ animationDelay: '0.5s' }}>
+        💎
       </div>
     </HeroCard>
   );

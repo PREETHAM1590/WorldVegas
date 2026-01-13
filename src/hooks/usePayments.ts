@@ -10,10 +10,17 @@ export interface PaymentResult {
   transactionId?: string;
   transactionHash?: string;
   error?: string;
+  simulated?: boolean;
 }
 
 // Treasury address (replace with your actual address)
 const TREASURY_ADDRESS = process.env.NEXT_PUBLIC_TREASURY_ADDRESS || '0x0000000000000000000000000000000000000000';
+
+// Check if we're in development/simulation mode
+const isSimulationMode = () => {
+  // Allow simulation if MiniKit is not installed (running outside World App)
+  return typeof window !== 'undefined' && !MiniKit.isInstalled();
+};
 
 export function usePayments() {
   const { addBalance, subtractBalance, user } = useUserStore();
@@ -22,11 +29,17 @@ export function usePayments() {
 
   /**
    * Deposit funds to casino
+   * Supports both real World App payments and simulation mode for testing
    */
   const deposit = useCallback(
     async (amount: number, token: 'WLD' | 'USDC'): Promise<PaymentResult> => {
       const transactionId = crypto.randomUUID();
       const tokenKey = token.toLowerCase() as 'wld' | 'usdc';
+
+      // Validate minimum amount
+      if (amount < 0.1) {
+        return { success: false, error: 'Minimum deposit is 0.1' };
+      }
 
       // Create pending transaction record
       const pendingTransaction: Transaction = {
@@ -42,10 +55,29 @@ export function usePayments() {
       try {
         setIsProcessing(true);
 
-        if (!MiniKit.isInstalled()) {
-          throw new Error('Please open this app in World App');
+        // SIMULATION MODE: For testing outside World App
+        if (isSimulationMode()) {
+          // Simulate a short delay for realism
+          await new Promise(resolve => setTimeout(resolve, 1000));
+
+          // Update local balance directly
+          addBalance(tokenKey, amount);
+
+          // Mark transaction as completed
+          updateTransaction(transactionId, {
+            status: 'completed',
+            transactionHash: `sim_${transactionId.slice(0, 8)}`,
+          });
+
+          return {
+            success: true,
+            transactionId,
+            transactionHash: `sim_${transactionId.slice(0, 8)}`,
+            simulated: true,
+          };
         }
 
+        // REAL MODE: World App MiniKit payment
         // Initialize payment on server
         const initResponse = await fetch('/api/payment/deposit', {
           method: 'POST',
@@ -139,15 +171,16 @@ export function usePayments() {
 
   /**
    * Withdraw funds from casino
+   * Supports both real World App withdrawals and simulation mode for testing
    */
   const withdraw = useCallback(
     async (amount: number, token: 'WLD' | 'USDC'): Promise<PaymentResult> => {
       const localTransactionId = crypto.randomUUID();
       const tokenKey = token.toLowerCase() as 'wld' | 'usdc';
 
-      // Check if user is logged in
-      if (!user?.address) {
-        return { success: false, error: 'Please login to withdraw' };
+      // Validate minimum amount
+      if (amount < 0.1) {
+        return { success: false, error: 'Minimum withdrawal is 0.1' };
       }
 
       // Check if user has enough balance locally first
@@ -169,6 +202,33 @@ export function usePayments() {
 
       try {
         setIsProcessing(true);
+
+        // SIMULATION MODE: For testing outside World App
+        if (isSimulationMode()) {
+          // Simulate a short delay for realism
+          await new Promise(resolve => setTimeout(resolve, 1000));
+
+          // Subtract from local balance
+          subtractBalance(tokenKey, amount);
+
+          // Mark transaction as completed
+          updateTransaction(localTransactionId, {
+            status: 'completed',
+            transactionHash: `sim_withdraw_${localTransactionId.slice(0, 8)}`,
+          });
+
+          return {
+            success: true,
+            transactionId: localTransactionId,
+            transactionHash: `sim_withdraw_${localTransactionId.slice(0, 8)}`,
+            simulated: true,
+          };
+        }
+
+        // REAL MODE: Check if user is logged in
+        if (!user?.address) {
+          throw new Error('Please login to withdraw');
+        }
 
         // Call the withdraw API - it will check database balance and process
         const response = await fetch('/api/payment/withdraw', {
@@ -221,5 +281,6 @@ export function usePayments() {
     deposit,
     withdraw,
     isProcessing,
+    isSimulationMode: isSimulationMode(),
   };
 }
