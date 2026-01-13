@@ -216,113 +216,121 @@ export default function WalletPage() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="w-full max-w-lg bg-casino-card rounded-t-3xl p-6 safe-area-bottom"
+              className="w-full max-w-lg bg-casino-card rounded-t-3xl flex flex-col max-h-[85vh]"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Handle */}
-              <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mb-6" />
+              {/* Header - Fixed */}
+              <div className="p-6 pb-0">
+                {/* Handle */}
+                <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mb-6" />
 
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold capitalize">{modalType}</h2>
-                <button
-                  onClick={() => setModalType(null)}
-                  className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Currency Selection */}
-              <div className="flex gap-2 mb-6">
-                {(['wld', 'usdc'] as const).map((c) => (
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold capitalize">{modalType}</h2>
                   <button
-                    key={c}
-                    onClick={() => setCurrency(c)}
-                    className={cn(
-                      'flex-1 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2',
-                      currency === c
-                        ? 'bg-primary-600 text-white'
-                        : 'bg-white/5 text-white/60 hover:bg-white/10'
-                    )}
+                    onClick={() => setModalType(null)}
+                    className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
                   >
-                    {c === 'wld' ? (
-                      <Coins className="w-4 h-4" />
-                    ) : (
-                      <DollarSign className="w-4 h-4" />
-                    )}
-                    {c.toUpperCase()}
+                    <X className="w-5 h-5" />
                   </button>
-                ))}
+                </div>
               </div>
 
-              {/* Amount Selection */}
-              <div className="mb-6">
-                <label className="block text-sm text-white/60 mb-2">Amount (min 0.1)</label>
-                <div className="grid grid-cols-4 gap-2 mb-3">
-                  {[0.1, 0.5, 1, 5, 10, 25, 50, 100].map((a) => (
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto px-6">
+                {/* Currency Selection */}
+                <div className="flex gap-2 mb-6">
+                  {(['wld', 'usdc'] as const).map((c) => (
                     <button
-                      key={a}
-                      onClick={() => setAmount(a)}
+                      key={c}
+                      onClick={() => setCurrency(c)}
                       className={cn(
-                        'py-2 rounded-lg text-sm font-medium transition-all',
-                        amount === a
-                          ? 'bg-gold-500 text-casino-dark'
+                        'flex-1 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2',
+                        currency === c
+                          ? 'bg-primary-600 text-white'
                           : 'bg-white/5 text-white/60 hover:bg-white/10'
                       )}
                     >
-                      {a}
+                      {c === 'wld' ? (
+                        <Coins className="w-4 h-4" />
+                      ) : (
+                        <DollarSign className="w-4 h-4" />
+                      )}
+                      {c.toUpperCase()}
                     </button>
                   ))}
                 </div>
-                {/* Custom Amount Input */}
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min="0.1"
-                    step="0.1"
-                    value={amount}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      if (!isNaN(val) && val >= 0.1) setAmount(val);
-                    }}
-                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-primary-500 transition-colors"
-                    placeholder="Custom amount"
-                  />
-                  <span className="text-white/60 uppercase text-sm font-medium">{currency}</span>
+
+                {/* Amount Selection */}
+                <div className="mb-6">
+                  <label className="block text-sm text-white/60 mb-2">Amount (min 0.1)</label>
+                  <div className="grid grid-cols-4 gap-2 mb-3">
+                    {[0.1, 0.5, 1, 5, 10, 25, 50, 100].map((a) => (
+                      <button
+                        key={a}
+                        onClick={() => setAmount(a)}
+                        className={cn(
+                          'py-2 rounded-lg text-sm font-medium transition-all',
+                          amount === a
+                            ? 'bg-gold-500 text-casino-dark'
+                            : 'bg-white/5 text-white/60 hover:bg-white/10'
+                        )}
+                      >
+                        {a}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Custom Amount Input */}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="0.1"
+                      step="0.1"
+                      value={amount}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val) && val >= 0.1) setAmount(val);
+                      }}
+                      className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-primary-500 transition-colors"
+                      placeholder="Custom amount"
+                    />
+                    <span className="text-white/60 uppercase text-sm font-medium">{currency}</span>
+                  </div>
                 </div>
+
+                {/* Current Balance */}
+                {modalType === 'withdraw' && (
+                  <div className="bg-white/5 rounded-xl p-4 mb-4">
+                    <p className="text-sm text-white/60">Available Balance</p>
+                    <p className="text-xl font-bold">
+                      {formatCurrency(balance[currency])} {currency.toUpperCase()}
+                    </p>
+                  </div>
+                )}
               </div>
 
-              {/* Current Balance */}
-              {modalType === 'withdraw' && (
-                <div className="bg-white/5 rounded-xl p-4 mb-6">
-                  <p className="text-sm text-white/60">Available Balance</p>
-                  <p className="text-xl font-bold">
-                    {formatCurrency(balance[currency])} {currency.toUpperCase()}
-                  </p>
-                </div>
-              )}
-
-              {/* Action Button */}
-              <Button
-                variant={modalType === 'deposit' ? 'primary' : 'secondary'}
-                size="lg"
-                onClick={handleTransaction}
-                isLoading={isProcessing}
-                disabled={modalType === 'withdraw' && balance[currency] < amount}
-                className="w-full"
-              >
-                {modalType === 'deposit' ? (
-                  <>
-                    <ArrowDownToLine className="w-5 h-5" />
-                    Deposit {amount} {currency.toUpperCase()}
-                  </>
-                ) : (
-                  <>
-                    <ArrowUpFromLine className="w-5 h-5" />
-                    Withdraw {amount} {currency.toUpperCase()}
-                  </>
-                )}
-              </Button>
+              {/* Action Button - Fixed at bottom */}
+              <div className="p-6 pt-4 pb-8 border-t border-white/10">
+                <Button
+                  variant={modalType === 'deposit' ? 'primary' : 'secondary'}
+                  size="lg"
+                  onClick={handleTransaction}
+                  isLoading={isProcessing}
+                  disabled={amount < 0.1 || (modalType === 'withdraw' && balance[currency] < amount)}
+                  className="w-full"
+                >
+                  {modalType === 'deposit' ? (
+                    <>
+                      <ArrowDownToLine className="w-5 h-5" />
+                      Deposit {amount} {currency.toUpperCase()}
+                    </>
+                  ) : (
+                    <>
+                      <ArrowUpFromLine className="w-5 h-5" />
+                      Withdraw {amount} {currency.toUpperCase()}
+                    </>
+                  )}
+                </Button>
+              </div>
             </motion.div>
           </motion.div>
         )}
