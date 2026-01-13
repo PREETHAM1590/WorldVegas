@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export interface GameResult {
   id: string;
@@ -13,26 +14,64 @@ export interface GameResult {
   nonce: number;
 }
 
+// Pending game for crash protection
+export interface PendingGame {
+  id: string;
+  game: 'slots' | 'blackjack' | 'prediction';
+  betAmount: number;
+  currency: 'wld' | 'usdc';
+  timestamp: number;
+  clientSeed: string;
+}
+
 interface GameState {
   currentGame: 'slots' | 'blackjack' | 'prediction' | null;
   isPlaying: boolean;
   results: GameResult[];
+  pendingGame: PendingGame | null;
   setCurrentGame: (game: 'slots' | 'blackjack' | 'prediction' | null) => void;
   setIsPlaying: (playing: boolean) => void;
   addResult: (result: GameResult) => void;
   clearResults: () => void;
+  // Crash protection
+  setPendingGame: (game: PendingGame | null) => void;
+  recoverPendingGame: () => PendingGame | null;
 }
 
-export const useGameStore = create<GameState>((set) => ({
-  currentGame: null,
-  isPlaying: false,
-  results: [],
+export const useGameStore = create<GameState>()(
+  persist(
+    (set, get) => ({
+      currentGame: null,
+      isPlaying: false,
+      results: [],
+      pendingGame: null,
 
-  setCurrentGame: (currentGame) => set({ currentGame }),
-  setIsPlaying: (isPlaying) => set({ isPlaying }),
-  addResult: (result) =>
-    set((state) => ({
-      results: [result, ...state.results].slice(0, 50), // Keep last 50 results
-    })),
-  clearResults: () => set({ results: [] }),
-}));
+      setCurrentGame: (currentGame) => set({ currentGame }),
+      setIsPlaying: (isPlaying) => set({ isPlaying }),
+      addResult: (result) =>
+        set((state) => ({
+          results: [result, ...state.results].slice(0, 100), // Keep last 100 results
+          pendingGame: null, // Clear pending game on result
+        })),
+      clearResults: () => set({ results: [] }),
+
+      // Crash protection methods
+      setPendingGame: (pendingGame) => set({ pendingGame }),
+      recoverPendingGame: () => {
+        const pending = get().pendingGame;
+        if (pending) {
+          // Clear the pending game after recovery
+          set({ pendingGame: null });
+        }
+        return pending;
+      },
+    }),
+    {
+      name: 'worldvegas-games',
+      partialize: (state) => ({
+        results: state.results,
+        pendingGame: state.pendingGame,
+      }),
+    }
+  )
+);

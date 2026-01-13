@@ -6,10 +6,14 @@ import {
   ArrowDownToLine,
   ArrowUpFromLine,
   History,
-  ChevronRight,
+  ExternalLink,
   Coins,
   DollarSign,
-  X
+  X,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Gamepad2
 } from 'lucide-react';
 import { Header } from '@/components/navigation/Header';
 import { BottomNav } from '@/components/navigation/BottomNav';
@@ -17,21 +21,25 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useUserStore } from '@/stores/userStore';
 import { useGameStore } from '@/stores/gameStore';
+import { useTransactionStore, WORLD_CHAIN_EXPLORER } from '@/stores/transactionStore';
 import { usePayments } from '@/hooks/usePayments';
 import { useToast } from '@/components/ui/Toast';
 import { formatCurrency, cn } from '@/lib/utils';
 
 type ModalType = 'deposit' | 'withdraw' | null;
+type TabType = 'transactions' | 'games';
 
 export default function WalletPage() {
   const { balance } = useUserStore();
   const { results } = useGameStore();
+  const { transactions } = useTransactionStore();
   const { deposit, withdraw, isProcessing } = usePayments();
   const { showToast } = useToast();
 
   const [modalType, setModalType] = useState<ModalType>(null);
   const [amount, setAmount] = useState(0.1);
   const [currency, setCurrency] = useState<'wld' | 'usdc'>('usdc');
+  const [activeTab, setActiveTab] = useState<TabType>('transactions');
 
   const handleTransaction = async () => {
     if (modalType === 'deposit') {
@@ -51,6 +59,20 @@ export default function WalletPage() {
         showToast(result.error || 'Withdrawal failed', 'error');
       }
     }
+  };
+
+  const openExplorer = (hash: string) => {
+    window.open(`${WORLD_CHAIN_EXPLORER}${hash}`, '_blank');
+  };
+
+  const formatDate = (timestamp: number) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   return (
@@ -123,79 +145,197 @@ export default function WalletPage() {
           </Card>
         </motion.div>
 
-        {/* Recent Activity */}
+        {/* History Tabs */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold">Recent Activity</h2>
-            <button className="flex items-center gap-1 text-sm text-primary-400">
+          <div className="flex gap-2 mb-4">
+            <button
+              onClick={() => setActiveTab('transactions')}
+              className={cn(
+                'flex-1 py-2 px-4 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2',
+                activeTab === 'transactions'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-white/5 text-white/60 hover:bg-white/10'
+              )}
+            >
               <History className="w-4 h-4" />
-              View All
+              Transactions
+            </button>
+            <button
+              onClick={() => setActiveTab('games')}
+              className={cn(
+                'flex-1 py-2 px-4 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2',
+                activeTab === 'games'
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-white/5 text-white/60 hover:bg-white/10'
+              )}
+            >
+              <Gamepad2 className="w-4 h-4" />
+              Game History
             </button>
           </div>
 
-          {results.length === 0 ? (
-            <Card className="p-8 text-center">
-              <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3">
-                <History className="w-6 h-6 text-white/30" />
-              </div>
-              <p className="text-white/50 text-sm">No activity yet</p>
-              <p className="text-white/30 text-xs">Play games to see your history</p>
-            </Card>
-          ) : (
+          {/* Transaction History */}
+          {activeTab === 'transactions' && (
             <div className="space-y-2">
-              {results.slice(0, 10).map((result) => (
-                <Card key={result.id} className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={cn(
-                          'w-10 h-10 rounded-xl flex items-center justify-center',
-                          result.outcome === 'win'
-                            ? 'bg-teal-500/20'
-                            : result.outcome === 'push'
-                            ? 'bg-white/10'
-                            : 'bg-red-500/20'
-                        )}
-                      >
-                        {result.game === 'slots' && '🎰'}
-                        {result.game === 'blackjack' && '🃏'}
-                        {result.game === 'prediction' && '📊'}
+              {transactions.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3">
+                    <History className="w-6 h-6 text-white/30" />
+                  </div>
+                  <p className="text-white/50 text-sm">No transactions yet</p>
+                  <p className="text-white/30 text-xs">Deposit or withdraw to see history</p>
+                </Card>
+              ) : (
+                transactions.map((tx) => (
+                  <Card key={tx.id} className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={cn(
+                            'w-10 h-10 rounded-xl flex items-center justify-center',
+                            tx.type === 'deposit' ? 'bg-teal-500/20' : 'bg-orange-500/20'
+                          )}
+                        >
+                          {tx.type === 'deposit' ? (
+                            <ArrowDownToLine className="w-5 h-5 text-teal-400" />
+                          ) : (
+                            <ArrowUpFromLine className="w-5 h-5 text-orange-400" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium capitalize">{tx.type}</p>
+                          <p className="text-xs text-white/50">{formatDate(tx.timestamp)}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium capitalize">{result.game}</p>
-                        <p className="text-xs text-white/50">
-                          Bet: {result.betAmount} {result.currency.toUpperCase()}
+                      <div className="text-right">
+                        <p
+                          className={cn(
+                            'font-bold',
+                            tx.type === 'deposit' ? 'text-teal-400' : 'text-orange-400'
+                          )}
+                        >
+                          {tx.type === 'deposit' ? '+' : '-'}
+                          {tx.amount} {tx.currency.toUpperCase()}
+                        </p>
+                        <div className="flex items-center gap-1 justify-end">
+                          {tx.status === 'completed' && (
+                            <CheckCircle className="w-3 h-3 text-teal-400" />
+                          )}
+                          {tx.status === 'pending' && (
+                            <Clock className="w-3 h-3 text-yellow-400" />
+                          )}
+                          {tx.status === 'failed' && (
+                            <XCircle className="w-3 h-3 text-red-400" />
+                          )}
+                          <span
+                            className={cn(
+                              'text-xs capitalize',
+                              tx.status === 'completed' && 'text-teal-400',
+                              tx.status === 'pending' && 'text-yellow-400',
+                              tx.status === 'failed' && 'text-red-400'
+                            )}
+                          >
+                            {tx.status}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Transaction Hash Link */}
+                    {tx.transactionHash && tx.status === 'completed' && (
+                      <button
+                        onClick={() => openExplorer(tx.transactionHash!)}
+                        className="mt-3 w-full flex items-center justify-center gap-2 py-2 px-3 bg-white/5 rounded-lg text-xs text-primary-400 hover:bg-white/10 transition-colors"
+                      >
+                        <span className="truncate">View on World Chain Explorer</span>
+                        <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                      </button>
+                    )}
+                    {tx.errorMessage && tx.status === 'failed' && (
+                      <p className="mt-2 text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2">
+                        {tx.errorMessage}
+                      </p>
+                    )}
+                  </Card>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* Game History */}
+          {activeTab === 'games' && (
+            <div className="space-y-2">
+              {results.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3">
+                    <Gamepad2 className="w-6 h-6 text-white/30" />
+                  </div>
+                  <p className="text-white/50 text-sm">No games played yet</p>
+                  <p className="text-white/30 text-xs">Play games to see your history</p>
+                </Card>
+              ) : (
+                results.map((result) => (
+                  <Card key={result.id} className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={cn(
+                            'w-10 h-10 rounded-xl flex items-center justify-center',
+                            result.outcome === 'win'
+                              ? 'bg-teal-500/20'
+                              : result.outcome === 'push'
+                              ? 'bg-white/10'
+                              : 'bg-red-500/20'
+                          )}
+                        >
+                          {result.game === 'slots' && '🎰'}
+                          {result.game === 'blackjack' && '🃏'}
+                          {result.game === 'prediction' && '📊'}
+                        </div>
+                        <div>
+                          <p className="font-medium capitalize">{result.game}</p>
+                          <p className="text-xs text-white/50">
+                            Bet: {result.betAmount} {result.currency.toUpperCase()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p
+                          className={cn(
+                            'font-bold',
+                            result.outcome === 'win'
+                              ? 'text-teal-400'
+                              : result.outcome === 'push'
+                              ? 'text-white/60'
+                              : 'text-red-400'
+                          )}
+                        >
+                          {result.outcome === 'win'
+                            ? `+${formatCurrency(result.payout)}`
+                            : result.outcome === 'push'
+                            ? '0'
+                            : `-${formatCurrency(result.betAmount)}`}
+                        </p>
+                        <p className="text-xs text-white/40">
+                          {formatDate(result.timestamp)}
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p
-                        className={cn(
-                          'font-bold',
-                          result.outcome === 'win'
-                            ? 'text-teal-400'
-                            : result.outcome === 'push'
-                            ? 'text-white/60'
-                            : 'text-red-400'
-                        )}
-                      >
-                        {result.outcome === 'win'
-                          ? `+${formatCurrency(result.payout)}`
-                          : result.outcome === 'push'
-                          ? '0'
-                          : `-${formatCurrency(result.betAmount)}`}
-                      </p>
-                      <p className="text-xs text-white/40">
-                        {new Date(result.timestamp).toLocaleTimeString()}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              ))}
+                    {/* Provably Fair Info */}
+                    {result.serverSeed && (
+                      <div className="mt-3 p-2 bg-white/5 rounded-lg">
+                        <p className="text-xs text-white/40 mb-1">Provably Fair</p>
+                        <p className="text-xs text-white/60 font-mono truncate">
+                          Seed: {result.serverSeed.slice(0, 20)}...
+                        </p>
+                      </div>
+                    )}
+                  </Card>
+                ))
+              )}
             </div>
           )}
         </motion.div>

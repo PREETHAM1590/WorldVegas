@@ -1,12 +1,14 @@
 'use client';
 
-import { MiniKit, Tokens, PayCommandInput, tokenToDecimals } from '@worldcoin/minikit-js';
+import { MiniKit, Tokens, PayCommandInput } from '@worldcoin/minikit-js';
 import { useUserStore } from '@/stores/userStore';
+import { useTransactionStore, Transaction } from '@/stores/transactionStore';
 import { useCallback, useState } from 'react';
 
 export interface PaymentResult {
   success: boolean;
   transactionId?: string;
+  transactionHash?: string;
   error?: string;
 }
 
@@ -15,6 +17,7 @@ const TREASURY_ADDRESS = process.env.NEXT_PUBLIC_TREASURY_ADDRESS || '0x00000000
 
 export function usePayments() {
   const { addBalance, subtractBalance, user } = useUserStore();
+  const { addTransaction, updateTransaction } = useTransactionStore();
   const [isProcessing, setIsProcessing] = useState(false);
 
   /**
@@ -22,15 +25,25 @@ export function usePayments() {
    */
   const deposit = useCallback(
     async (amount: number, token: 'WLD' | 'USDC'): Promise<PaymentResult> => {
+      const transactionId = crypto.randomUUID();
+      const tokenKey = token.toLowerCase() as 'wld' | 'usdc';
+
+      // Create pending transaction record
+      const pendingTransaction: Transaction = {
+        id: transactionId,
+        type: 'deposit',
+        amount,
+        currency: tokenKey,
+        status: 'pending',
+        timestamp: Date.now(),
+      };
+      addTransaction(pendingTransaction);
+
       try {
         setIsProcessing(true);
 
         if (!MiniKit.isInstalled()) {
           throw new Error('Please open this app in World App');
-        }
-
-        if (!user) {
-          throw new Error('Please sign in first');
         }
 
         // Initialize payment on server
@@ -40,7 +53,7 @@ export function usePayments() {
           body: JSON.stringify({
             amount: amount.toString(),
             token,
-            userId: user.address,
+            userId: user?.address || 'guest',
           }),
         });
 
@@ -75,6 +88,9 @@ export function usePayments() {
           throw new Error('Payment was cancelled or failed');
         }
 
+        // Get transaction hash from payload
+        const txHash = (finalPayload as any).transaction_id || (finalPayload as any).transactionHash;
+
         // Verify payment on server
         const verifyResponse = await fetch('/api/payment/deposit', {
           method: 'PUT',
@@ -91,20 +107,34 @@ export function usePayments() {
         }
 
         // Update local balance
-        addBalance(token.toLowerCase() as 'wld' | 'usdc', amount);
+        addBalance(tokenKey, amount);
+
+        // Update transaction as completed
+        updateTransaction(transactionId, {
+          status: 'completed',
+          transactionHash: txHash || verifyResult.transactionId,
+        });
 
         return {
           success: true,
           transactionId: verifyResult.transactionId,
+          transactionHash: txHash,
         };
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Payment failed';
+
+        // Update transaction as failed
+        updateTransaction(transactionId, {
+          status: 'failed',
+          errorMessage: message,
+        });
+
         return { success: false, error: message };
       } finally {
         setIsProcessing(false);
       }
     },
-    [user, addBalance]
+    [user, addBalance, addTransaction, updateTransaction]
   );
 
   /**
@@ -112,15 +142,28 @@ export function usePayments() {
    */
   const withdraw = useCallback(
     async (amount: number, token: 'WLD' | 'USDC'): Promise<PaymentResult> => {
+      const transactionId = crypto.randomUUID();
+      const tokenKey = token.toLowerCase() as 'wld' | 'usdc';
+
+      // Check if user has enough balance locally first
+      const currentBalance = useUserStore.getState().balance;
+      if (currentBalance[tokenKey] < amount) {
+        return { success: false, error: 'Insufficient balance' };
+      }
+
+      // Create pending transaction record
+      const pendingTransaction: Transaction = {
+        id: transactionId,
+        type: 'withdraw',
+        amount,
+        currency: tokenKey,
+        status: 'pending',
+        timestamp: Date.now(),
+      };
+      addTransaction(pendingTransaction);
+
       try {
         setIsProcessing(true);
-
-        // Check if user has enough balance locally first
-        const currentBalance = useUserStore.getState().balance;
-        const tokenKey = token.toLowerCase() as 'wld' | 'usdc';
-        if (currentBalance[tokenKey] < amount) {
-          throw new Error('Insufficient balance');
-        }
 
         const response = await fetch('/api/payment/withdraw', {
           method: 'POST',
@@ -141,18 +184,31 @@ export function usePayments() {
         // Subtract from local balance on success
         subtractBalance(tokenKey, amount);
 
+        // Update transaction as completed
+        updateTransaction(transactionId, {
+          status: 'completed',
+          transactionHash: result.transactionId,
+        });
+
         return {
           success: true,
           transactionId: result.transactionId,
         };
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Withdrawal failed';
+
+        // Update transaction as failed
+        updateTransaction(transactionId, {
+          status: 'failed',
+          errorMessage: message,
+        });
+
         return { success: false, error: message };
       } finally {
         setIsProcessing(false);
       }
     },
-    [user, subtractBalance]
+    [user, subtractBalance, addTransaction, updateTransaction]
   );
 
   return {
