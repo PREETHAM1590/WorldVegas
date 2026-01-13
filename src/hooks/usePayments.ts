@@ -14,7 +14,7 @@ export interface PaymentResult {
 const TREASURY_ADDRESS = process.env.NEXT_PUBLIC_TREASURY_ADDRESS || '0x0000000000000000000000000000000000000000';
 
 export function usePayments() {
-  const { addBalance, user } = useUserStore();
+  const { addBalance, subtractBalance, user } = useUserStore();
   const [isProcessing, setIsProcessing] = useState(false);
 
   /**
@@ -115,8 +115,11 @@ export function usePayments() {
       try {
         setIsProcessing(true);
 
-        if (!user) {
-          throw new Error('Please sign in first');
+        // Check if user has enough balance locally first
+        const currentBalance = useUserStore.getState().balance;
+        const tokenKey = token.toLowerCase() as 'wld' | 'usdc';
+        if (currentBalance[tokenKey] < amount) {
+          throw new Error('Insufficient balance');
         }
 
         const response = await fetch('/api/payment/withdraw', {
@@ -125,8 +128,8 @@ export function usePayments() {
           body: JSON.stringify({
             amount: amount.toString(),
             token,
-            userId: user.address,
-            toAddress: user.address,
+            userId: user?.address || 'guest',
+            toAddress: user?.address || 'guest',
           }),
         });
 
@@ -134,6 +137,9 @@ export function usePayments() {
         if (!result.success) {
           throw new Error(result.error || 'Withdrawal failed');
         }
+
+        // Subtract from local balance on success
+        subtractBalance(tokenKey, amount);
 
         return {
           success: true,
@@ -146,7 +152,7 @@ export function usePayments() {
         setIsProcessing(false);
       }
     },
-    [user]
+    [user, subtractBalance]
   );
 
   return {
