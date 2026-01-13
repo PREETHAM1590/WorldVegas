@@ -13,6 +13,7 @@ import {
   isValidWorldIDProof,
 } from '@/lib/security';
 import { VERIFY_ACTIONS } from '@/lib/constants';
+import prisma from '@/lib/db';
 
 interface VerifyActionResult {
   success: boolean;
@@ -20,9 +21,6 @@ interface VerifyActionResult {
   verificationLevel?: string;
   error?: string;
 }
-
-// Store used nullifier hashes to prevent replay (use database in production)
-const usedNullifiers = new Map<string, { action: string; timestamp: number }>();
 
 export async function POST(request: NextRequest): Promise<NextResponse<VerifyActionResult>> {
   try {
@@ -104,11 +102,16 @@ export async function POST(request: NextRequest): Promise<NextResponse<VerifyAct
     // Extract verification data
     const { nullifier_hash, verification_level } = payload;
 
-    // Check for nullifier reuse (Sybil protection)
+    // Check for nullifier reuse in database (Sybil protection)
     // For unique actions (like one-time bonuses), check if nullifier was used
-    const existingUse = usedNullifiers.get(nullifier_hash);
-    if (existingUse && existingUse.action === action) {
-      // Depending on action type, this may or may not be allowed
+    const existingNullifier = await prisma.usedNullifier.findFirst({
+      where: {
+        nullifierHash: nullifier_hash,
+        action: action,
+      },
+    });
+
+    if (existingNullifier) {
       // For login actions, allow reuse
       // For one-time actions, reject
       if (action !== VERIFY_ACTIONS.LOGIN) {
@@ -116,18 +119,21 @@ export async function POST(request: NextRequest): Promise<NextResponse<VerifyAct
       }
     }
 
-    // Store nullifier usage
-    usedNullifiers.set(nullifier_hash, {
-      action,
-      timestamp: Date.now(),
-    });
-
-    // Clean up old nullifiers (older than 24 hours)
-    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-    for (const [hash, data] of usedNullifiers.entries()) {
-      if (data.timestamp < oneDayAgo) {
-        usedNullifiers.delete(hash);
-      }
+    // Store nullifier usage in database
+    // For non-login actions, always create a new record
+    // For login actions, only create if it doesn't exist
+    if (!existingNullifier || action !== VERIFY_ACTIONS.LOGIN) {
+      await prisma.usedNullifier.upsert({
+        where: { nullifierHash: nullifier_hash },
+        update: {
+          action,
+          usedAt: new Date(),
+        },
+        create: {
+          nullifierHash: nullifier_hash,
+          action,
+        },
+      });
     }
 
     // Log successful verification (for audit trail)

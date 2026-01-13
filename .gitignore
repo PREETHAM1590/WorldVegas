@@ -42,3 +42,11 @@ next-env.d.ts
 coverage/
 
 .vercel
+
+/generated/prisma
+
+# Claude temp files
+tmpclaude-*
+
+# Misc
+*.png.bak

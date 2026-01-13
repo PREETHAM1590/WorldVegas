@@ -7,7 +7,8 @@ export async function POST(): Promise<NextResponse> {
 
     // Clear all session cookies
     cookieStore.delete('siwe_nonce');
-    cookieStore.delete('session_address');
+    cookieStore.delete('session');
+    cookieStore.delete('session_address'); // Legacy, keep for cleanup
 
     return NextResponse.json({ success: true });
   } catch (error) {

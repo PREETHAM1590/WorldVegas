@@ -20,8 +20,8 @@ interface TransactionState {
   clearTransactions: () => void;
 }
 
-// World Chain Explorer URL
-export const WORLD_CHAIN_EXPLORER = 'https://worldchain-mainnet.explorer.alchemy.com/tx/';
+// World Chain Explorer URL (WorldScan)
+export const WORLD_CHAIN_EXPLORER = 'https://worldscan.org/tx/';
 
 export const useTransactionStore = create<TransactionState>()(
   persist(

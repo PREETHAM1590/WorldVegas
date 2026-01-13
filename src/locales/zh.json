@@ -1,0 +1,193 @@
+{
+  "common": {
+    "appName": "WorldVegas",
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "cancel": "取消",
+    "confirm": "确认",
+    "save": "保存",
+    "close": "关闭",
+    "back": "返回",
+    "next": "下一步",
+    "submit": "提交",
+    "search": "搜索",
+    "noResults": "未找到结果",
+    "viewAll": "查看全部"
+  },
+  "nav": {
+    "home": "首页",
+    "games": "游戏",
+    "wallet": "钱包",
+    "profile": "个人资料",
+    "settings": "设置",
+    "leaderboard": "排行榜",
+    "support": "客服"
+  },
+  "auth": {
+    "login": "登录",
+    "logout": "退出",
+    "connectWallet": "连接钱包",
+    "verifyWithWorldId": "使用World ID验证",
+    "loginWithWorldApp": "使用World App登录",
+    "notLoggedIn": "未登录",
+    "pleaseLogin": "请登录以继续"
+  },
+  "games": {
+    "title": "游戏",
+    "subtitle": "选择游戏，开始赢钱",
+    "practiceMode": "练习模式",
+    "realMode": "真实模式",
+    "slots": {
+      "title": "幸运老虎机",
+      "description": "转动转轴，最高100倍奖励"
+    },
+    "blackjack": {
+      "title": "二十一点",
+      "description": "经典21点 - 击败庄家"
+    },
+    "aviator": {
+      "title": "飞机",
+      "description": "在飞机坠毁前提现！"
+    },
+    "coinflip": {
+      "title": "抛硬币",
+      "description": "50/50几率 - 正面还是反面？"
+    },
+    "dice": {
+      "title": "骰子",
+      "description": "预测大小赢取奖励"
+    },
+    "roulette": {
+      "title": "轮盘",
+      "description": "欧式轮盘 - 投注红、黑或绿"
+    },
+    "mines": {
+      "title": "扫雷",
+      "description": "找到宝石，避开地雷！"
+    },
+    "comingSoon": "即将推出",
+    "poker": {
+      "title": "扑克",
+      "description": "德州扑克即将推出"
+    }
+  },
+  "betting": {
+    "betAmount": "投注金额",
+    "minBet": "最小投注",
+    "maxBet": "最大投注",
+    "placeBet": "下注",
+    "spin": "旋转",
+    "flip": "抛掷",
+    "roll": "掷骰",
+    "hit": "要牌",
+    "stand": "停牌",
+    "double": "加倍",
+    "split": "分牌",
+    "cashOut": "提现",
+    "autoCashOut": "自动提现",
+    "insufficientBalance": "余额不足",
+    "selectCurrency": "选择货币",
+    "potentialWin": "潜在奖金",
+    "multiplier": "倍数"
+  },
+  "wallet": {
+    "title": "钱包",
+    "balance": "余额",
+    "deposit": "存款",
+    "withdraw": "取款",
+    "transactions": "交易记录",
+    "noTransactions": "暂无交易",
+    "pending": "处理中",
+    "completed": "已完成",
+    "failed": "失败",
+    "amount": "金额",
+    "currency": "货币",
+    "enterAmount": "输入金额",
+    "depositSuccess": "存款成功！",
+    "withdrawSuccess": "取款已申请！",
+    "exportHistory": "导出记录"
+  },
+  "profile": {
+    "title": "个人资料",
+    "stats": "统计数据",
+    "totalWagered": "总投注",
+    "totalWon": "总赢取",
+    "gamesPlayed": "游戏次数",
+    "netProfit": "净盈利",
+    "memberSince": "注册时间",
+    "lastLogin": "上次登录"
+  },
+  "leaderboard": {
+    "title": "排行榜",
+    "subtitle": "与其他玩家竞争荣誉！",
+    "daily": "每日",
+    "weekly": "每周",
+    "monthly": "每月",
+    "allTime": "历史总榜",
+    "rank": "排名",
+    "player": "玩家",
+    "wagered": "投注额",
+    "profit": "盈利",
+    "noRankings": "本期暂无排名",
+    "playToRank": "玩游戏即可上榜！"
+  },
+  "bonuses": {
+    "title": "奖励",
+    "activeBonuses": "活跃奖励",
+    "availableBonuses": "可用奖励",
+    "claimBonus": "领取奖励",
+    "promoCode": "优惠码",
+    "enterCode": "输入优惠码",
+    "apply": "应用",
+    "wageringProgress": "流水进度",
+    "wageringRequired": "流水要求",
+    "expiresIn": "过期时间",
+    "noBonuses": "暂无可用奖励"
+  },
+  "responsibleGambling": {
+    "title": "负责任博彩",
+    "description": "设置限制以保持控制",
+    "depositLimits": "存款限额",
+    "daily": "每日",
+    "weekly": "每周",
+    "monthly": "每月",
+    "lossLimits": "损失限额",
+    "sessionTimeLimit": "会话时间限制",
+    "minutes": "分钟",
+    "selfExclusion": "自我排除",
+    "selfExclusionDesc": "暂时禁止自己游戏",
+    "coolOff": "冷静期",
+    "coolOffDesc": "休息几天",
+    "helpline": "需要帮助？请拨打 1-800-522-4700"
+  },
+  "settings": {
+    "title": "设置",
+    "language": "语言",
+    "notifications": "通知",
+    "emailNotifications": "邮件通知",
+    "pushNotifications": "推送通知",
+    "sound": "声音",
+    "soundEffects": "音效",
+    "theme": "主题",
+    "darkMode": "深色模式"
+  },
+  "support": {
+    "title": "客服",
+    "faq": "常见问题",
+    "contactUs": "联系我们",
+    "email": "邮箱",
+    "liveChat": "在线客服",
+    "helpCenter": "帮助中心"
+  },
+  "errors": {
+    "generic": "出错了，请重试。",
+    "network": "网络错误，请检查连接。",
+    "unauthorized": "请登录以继续。",
+    "notFound": "未找到。",
+    "serverError": "服务器错误，请稍后重试。",
+    "invalidAmount": "请输入有效金额。",
+    "betTooLow": "投注金额过低。",
+    "betTooHigh": "投注金额过高。"
+  }
+}

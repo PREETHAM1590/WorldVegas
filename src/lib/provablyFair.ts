@@ -201,6 +201,9 @@ export function generateSlotOutcome(
 
   const typedReels = reels as [number, number, number];
 
+  // Symbol multipliers (must match frontend SYMBOLS array)
+  const SYMBOL_MULTIPLIERS = [2, 3, 4, 5, 6, 8, 15, 25, 50, 100];
+
   // Calculate win conditions
   const allSame = typedReels[0] === typedReels[1] && typedReels[1] === typedReels[2];
   const twoSame =
@@ -210,9 +213,8 @@ export function generateSlotOutcome(
 
   let multiplier = 0;
   if (allSame) {
-    // Triple match - multiplier based on symbol
-    // 7s are jackpot, 0s are second best
-    multiplier = typedReels[0] === 7 ? 100 : typedReels[0] === 0 ? 50 : 10;
+    // Triple match - use symbol-specific multiplier
+    multiplier = SYMBOL_MULTIPLIERS[typedReels[0]] || 10;
   } else if (twoSame) {
     multiplier = 2;
   }

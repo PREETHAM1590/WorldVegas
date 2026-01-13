@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install -g:*)",
+      "Skill(frontend-design)",
+      "WebSearch",
+      "WebFetch(domain:stake.com)",
+      "WebFetch(domain:roobet.com)",
+      "WebFetch(domain:rollbit.com)",
+      "WebFetch(domain:www.behance.net)",
+      "WebFetch(domain:dribbble.com)",
+      "WebFetch(domain:www.pinterest.com)",
+      "WebFetch(domain:uxplanet.org)",
+      "WebFetch(domain:www.toptal.com)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:www.slotcatalog.com)",
+      "WebFetch(domain:www.awwwards.com)",
+      "WebFetch(domain:www.gamblinginsider.com)"
+    ]
+  },
+  "outputStyle": "default"
+}

@@ -1,0 +1,193 @@
+{
+  "common": {
+    "appName": "WorldVegas",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "search": "Search",
+    "noResults": "No results found",
+    "viewAll": "View All"
+  },
+  "nav": {
+    "home": "Home",
+    "games": "Games",
+    "wallet": "Wallet",
+    "profile": "Profile",
+    "settings": "Settings",
+    "leaderboard": "Leaderboard",
+    "support": "Support"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "connectWallet": "Connect Wallet",
+    "verifyWithWorldId": "Verify with World ID",
+    "loginWithWorldApp": "Login with World App",
+    "notLoggedIn": "Not logged in",
+    "pleaseLogin": "Please login to continue"
+  },
+  "games": {
+    "title": "Games",
+    "subtitle": "Choose your game and start winning",
+    "practiceMode": "Practice Mode",
+    "realMode": "Real Mode",
+    "slots": {
+      "title": "Lucky Slots",
+      "description": "Spin the reels for up to 100x multiplier"
+    },
+    "blackjack": {
+      "title": "Blackjack",
+      "description": "Classic 21 - Beat the dealer"
+    },
+    "aviator": {
+      "title": "Aviator",
+      "description": "Cash out before the plane crashes!"
+    },
+    "coinflip": {
+      "title": "Coin Flip",
+      "description": "50/50 odds - Heads or Tails?"
+    },
+    "dice": {
+      "title": "Dice",
+      "description": "Predict over or under to win"
+    },
+    "roulette": {
+      "title": "Roulette",
+      "description": "European style - Bet on red, black or green"
+    },
+    "mines": {
+      "title": "Mines",
+      "description": "Reveal gems, avoid mines!"
+    },
+    "comingSoon": "Coming Soon",
+    "poker": {
+      "title": "Poker",
+      "description": "Texas Hold'em coming soon"
+    }
+  },
+  "betting": {
+    "betAmount": "Bet Amount",
+    "minBet": "Min Bet",
+    "maxBet": "Max Bet",
+    "placeBet": "Place Bet",
+    "spin": "Spin",
+    "flip": "Flip",
+    "roll": "Roll",
+    "hit": "Hit",
+    "stand": "Stand",
+    "double": "Double",
+    "split": "Split",
+    "cashOut": "Cash Out",
+    "autoCashOut": "Auto Cash Out",
+    "insufficientBalance": "Insufficient balance",
+    "selectCurrency": "Select Currency",
+    "potentialWin": "Potential Win",
+    "multiplier": "Multiplier"
+  },
+  "wallet": {
+    "title": "Wallet",
+    "balance": "Balance",
+    "deposit": "Deposit",
+    "withdraw": "Withdraw",
+    "transactions": "Transactions",
+    "noTransactions": "No transactions yet",
+    "pending": "Pending",
+    "completed": "Completed",
+    "failed": "Failed",
+    "amount": "Amount",
+    "currency": "Currency",
+    "enterAmount": "Enter amount",
+    "depositSuccess": "Deposit successful!",
+    "withdrawSuccess": "Withdrawal requested!",
+    "exportHistory": "Export History"
+  },
+  "profile": {
+    "title": "Profile",
+    "stats": "Statistics",
+    "totalWagered": "Total Wagered",
+    "totalWon": "Total Won",
+    "gamesPlayed": "Games Played",
+    "netProfit": "Net Profit",
+    "memberSince": "Member Since",
+    "lastLogin": "Last Login"
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "subtitle": "Compete with other players for glory!",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "allTime": "All Time",
+    "rank": "Rank",
+    "player": "Player",
+    "wagered": "Wagered",
+    "profit": "Profit",
+    "noRankings": "No rankings yet this period",
+    "playToRank": "Play games to appear on the leaderboard!"
+  },
+  "bonuses": {
+    "title": "Bonuses",
+    "activeBonuses": "Active Bonuses",
+    "availableBonuses": "Available Bonuses",
+    "claimBonus": "Claim Bonus",
+    "promoCode": "Promo Code",
+    "enterCode": "Enter promo code",
+    "apply": "Apply",
+    "wageringProgress": "Wagering Progress",
+    "wageringRequired": "Wagering Required",
+    "expiresIn": "Expires in",
+    "noBonuses": "No bonuses available"
+  },
+  "responsibleGambling": {
+    "title": "Responsible Gambling",
+    "description": "Set limits to help you stay in control",
+    "depositLimits": "Deposit Limits",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "lossLimits": "Loss Limits",
+    "sessionTimeLimit": "Session Time Limit",
+    "minutes": "minutes",
+    "selfExclusion": "Self-Exclusion",
+    "selfExclusionDesc": "Temporarily block yourself from playing",
+    "coolOff": "Cooling Off Period",
+    "coolOffDesc": "Take a break for a few days",
+    "helpline": "Need help? Call 1-800-522-4700"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "notifications": "Notifications",
+    "emailNotifications": "Email Notifications",
+    "pushNotifications": "Push Notifications",
+    "sound": "Sound",
+    "soundEffects": "Sound Effects",
+    "theme": "Theme",
+    "darkMode": "Dark Mode"
+  },
+  "support": {
+    "title": "Support",
+    "faq": "FAQ",
+    "contactUs": "Contact Us",
+    "email": "Email",
+    "liveChat": "Live Chat",
+    "helpCenter": "Help Center"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "Network error. Please check your connection.",
+    "unauthorized": "Please login to continue.",
+    "notFound": "Not found.",
+    "serverError": "Server error. Please try again later.",
+    "invalidAmount": "Please enter a valid amount.",
+    "betTooLow": "Bet amount is too low.",
+    "betTooHigh": "Bet amount is too high."
+  }
+}

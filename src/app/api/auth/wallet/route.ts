@@ -10,6 +10,7 @@ import {
   createSecureResponse,
   createErrorResponse,
 } from '@/lib/security';
+import { UserService } from '@/lib/services';
 
 export interface WalletAuthResult {
   success: boolean;
@@ -76,8 +77,19 @@ export async function POST(request: NextRequest): Promise<NextResponse<WalletAut
         return createErrorResponse('Invalid signature', 401);
       }
 
+      // Create or update user in database
+      const user = await UserService.findOrCreateByAddress(payload.address);
+
+      // Create session data with expiration
+      const sessionData = {
+        address: payload.address,
+        userId: user.id,
+        exp: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days from now
+      };
+      const sessionValue = Buffer.from(JSON.stringify(sessionData)).toString('base64');
+
       // Set session cookie for the authenticated user
-      cookieStore.set('session_address', payload.address, {
+      cookieStore.set('session', sessionValue, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',

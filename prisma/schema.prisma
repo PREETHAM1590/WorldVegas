@@ -1,0 +1,450 @@
+// Prisma schema for WorldVegas Casino
+// Uses Vercel Postgres
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+// User model - stores user data and balances
+model User {
+  id            String   @id @default(cuid())
+  address       String   @unique // World ID verified address
+  nullifierHash String?  @unique // World ID nullifier for verification level
+
+  // Balances
+  wldBalance    Float    @default(0)
+  usdcBalance   Float    @default(0)
+
+  // Stats
+  totalWagered  Float    @default(0)
+  totalWon      Float    @default(0)
+  gamesPlayed   Int      @default(0)
+
+  // Responsible Gambling Settings
+  depositLimitDaily     Float?   // Daily deposit limit
+  depositLimitWeekly    Float?   // Weekly deposit limit
+  depositLimitMonthly   Float?   // Monthly deposit limit
+  lossLimitDaily        Float?   // Daily loss limit
+  lossLimitWeekly       Float?   // Weekly loss limit
+  sessionTimeLimit      Int?     // Session time limit in minutes
+  selfExcludedUntil     DateTime? // Self-exclusion end date
+  coolingOffUntil       DateTime? // Cooling off period end date
+  isAccountLocked       Boolean  @default(false)
+
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  lastLoginAt   DateTime?
+
+  // Relations
+  transactions  Transaction[]
+  gameResults   GameResult[]
+  gameSessions  GameSession[]
+  usedNullifiers UsedNullifier[]
+  deposits      PendingDeposit[]
+
+  @@index([address])
+  @@index([nullifierHash])
+}
+
+// Transaction model - deposit/withdraw history
+model Transaction {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+
+  type            TransactionType
+  amount          Float
+  currency        Currency
+  status          TransactionStatus
+
+  // Blockchain data
+  transactionHash String?
+  blockNumber     Int?
+
+  // Error handling
+  errorMessage    String?
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+  completedAt     DateTime?
+
+  @@index([userId])
+  @@index([transactionHash])
+  @@index([status])
+}
+
+// Game result model - stores all game outcomes
+model GameResult {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  sessionId   String?
+  session     GameSession? @relation(fields: [sessionId], references: [id])
+
+  game        GameType
+  betAmount   Float
+  currency    Currency
+  outcome     GameOutcome
+  payout      Float
+  multiplier  Float?
+
+  // Provably fair data
+  serverSeed  String
+  clientSeed  String
+  nonce       Int
+
+  // Game-specific data (JSON)
+  gameData    Json?
+
+  // Timestamps
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([sessionId])
+  @@index([game])
+  @@index([createdAt])
+}
+
+// Game session for provably fair verification
+model GameSession {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+
+  gameType        GameType
+
+  // Provably fair seeds
+  serverSeed      String   // Hidden until revealed
+  serverSeedHash  String   // Shown to user before game
+  clientSeed      String
+  nonce           Int      @default(0)
+
+  // Status
+  isActive        Boolean  @default(true)
+
+  // Timestamps
+  createdAt       DateTime @default(now())
+  expiresAt       DateTime
+
+  // Relations
+  gameResults     GameResult[]
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+// Pending game for crash protection
+model PendingGame {
+  id          String   @id @default(cuid())
+  sessionId   String?
+  userId      String
+
+  game        GameType
+  betAmount   Float
+  currency    Currency
+  clientSeed  String
+
+  // Recovery data
+  resolved    Boolean  @default(false)
+  resolvedAt  DateTime?
+
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([resolved])
+}
+
+// Enums
+enum TransactionType {
+  DEPOSIT
+  WITHDRAW
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum Currency {
+  WLD
+  USDC
+}
+
+enum GameType {
+  SLOTS
+  BLACKJACK
+  PREDICTION
+  AVIATOR
+  COINFLIP
+  DICE
+  ROULETTE
+  MINES
+}
+
+enum GameOutcome {
+  WIN
+  LOSE
+  PUSH
+}
+
+// Used nullifiers to prevent replay attacks (moved from in-memory)
+model UsedNullifier {
+  id            String   @id @default(cuid())
+  nullifierHash String   @unique
+  action        String
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  usedAt        DateTime @default(now())
+
+  @@index([nullifierHash])
+  @@index([action])
+}
+
+// Pending deposits (moved from in-memory)
+model PendingDeposit {
+  id         String   @id @default(cuid())
+  paymentId  String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  amount     Float
+  token      Currency
+  status     DepositStatus @default(PENDING)
+  txHash     String?
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+
+  @@index([paymentId])
+  @@index([userId])
+  @@index([status])
+}
+
+enum DepositStatus {
+  PENDING
+  VERIFIED
+  COMPLETED
+  EXPIRED
+  FAILED
+}
+
+// ==========================================
+// Admin & System Models
+// ==========================================
+
+// Admin users for the admin panel
+model Admin {
+  id            String   @id @default(cuid())
+  address       String   @unique // Wallet address
+  username      String   @unique
+  role          AdminRole @default(MODERATOR)
+  isActive      Boolean  @default(true)
+
+  // 2FA
+  twoFactorSecret String?
+  twoFactorEnabled Boolean @default(false)
+
+  // Audit
+  lastLoginAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  createdBy     String?  // Admin who created this account
+
+  // Relations
+  auditLogs     AuditLog[]
+
+  @@index([address])
+  @@index([role])
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+  MODERATOR
+  VIEWER
+}
+
+// Audit log for admin actions
+model AuditLog {
+  id          String   @id @default(cuid())
+  adminId     String
+  admin       Admin    @relation(fields: [adminId], references: [id])
+
+  action      String   // e.g., "user.lock", "bonus.create", "withdrawal.approve"
+  targetType  String?  // e.g., "User", "Transaction", "Bonus"
+  targetId    String?  // ID of the affected record
+
+  details     Json?    // Additional details
+  ipAddress   String?
+  userAgent   String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([adminId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// Bonus/Promotion System
+model Bonus {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  code            String?  @unique // Optional promo code
+
+  type            BonusType
+  amount          Float?   // Fixed amount for DEPOSIT_MATCH
+  percentage      Float?   // Percentage for percentage-based bonuses
+  maxBonus        Float?   // Maximum bonus amount
+
+  // Requirements
+  minDeposit      Float?   // Minimum deposit to qualify
+  wagerRequirement Float   @default(1) // e.g., 30x wagering requirement
+
+  // Validity
+  startsAt        DateTime @default(now())
+  expiresAt       DateTime?
+  usageLimit      Int?     // Total times this can be used
+  perUserLimit    Int      @default(1) // Times per user
+
+  // Eligibility
+  isActive        Boolean  @default(true)
+  vipLevelRequired Int?    // Minimum VIP level required
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  claims          BonusClaim[]
+
+  @@index([code])
+  @@index([type])
+  @@index([isActive])
+}
+
+enum BonusType {
+  WELCOME
+  DEPOSIT_MATCH
+  FREE_SPINS
+  CASHBACK
+  RELOAD
+  VIP_REWARD
+  REFERRAL
+  CUSTOM
+}
+
+// User bonus claims
+model BonusClaim {
+  id              String   @id @default(cuid())
+  userId          String
+  bonusId         String
+  bonus           Bonus    @relation(fields: [bonusId], references: [id])
+
+  amount          Float    // Bonus amount received
+  currency        Currency
+  status          BonusClaimStatus @default(PENDING)
+
+  // Wagering progress
+  wagerRequired   Float    // Total amount to wager
+  wagerProgress   Float    @default(0) // Amount wagered so far
+
+  // Expiry
+  expiresAt       DateTime
+
+  claimedAt       DateTime @default(now())
+  completedAt     DateTime?
+
+  @@index([userId])
+  @@index([bonusId])
+  @@index([status])
+}
+
+enum BonusClaimStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+// VIP/Loyalty Program
+model VIPLevel {
+  id              String   @id @default(cuid())
+  level           Int      @unique
+  name            String   // e.g., "Bronze", "Silver", "Gold", "Platinum", "Diamond"
+
+  // Requirements
+  pointsRequired  Int      // Points needed to reach this level
+
+  // Benefits
+  cashbackRate    Float    @default(0) // Percentage cashback
+  depositBonus    Float    @default(0) // Percentage extra on deposits
+  withdrawalPriority Int   @default(0) // Higher = faster processing
+  dailyWithdrawLimit Float? // Increased withdrawal limits
+
+  // Rewards
+  levelUpBonus    Float?   // One-time bonus when reaching this level
+  monthlyBonus    Float?   // Monthly reward
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  users           UserVIP[]
+}
+
+// User VIP status
+model UserVIP {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  levelId         String
+  level           VIPLevel @relation(fields: [levelId], references: [id])
+
+  // Points tracking
+  totalPoints     Int      @default(0)
+  currentPoints   Int      @default(0) // Points in current period
+
+  // Monthly reset tracking
+  lastMonthlyReset DateTime?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([levelId])
+}
+
+// Leaderboard entries (cached for performance)
+model LeaderboardEntry {
+  id              String   @id @default(cuid())
+  userId          String
+  period          String   // e.g., "2024-01", "2024-W01", "2024-01-15"
+  type            LeaderboardType
+
+  // Stats
+  totalWagered    Float    @default(0)
+  totalWon        Float    @default(0)
+  gamesPlayed     Int      @default(0)
+  biggestWin      Float    @default(0)
+
+  // Ranking
+  rank            Int?
+
+  updatedAt       DateTime @updatedAt
+
+  @@unique([userId, period, type])
+  @@index([period, type, rank])
+}
+
+enum LeaderboardType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  ALL_TIME
+}

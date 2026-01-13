@@ -1,0 +1,193 @@
+{
+  "common": {
+    "appName": "WorldVegas",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "save": "Guardar",
+    "close": "Cerrar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "submit": "Enviar",
+    "search": "Buscar",
+    "noResults": "No se encontraron resultados",
+    "viewAll": "Ver Todo"
+  },
+  "nav": {
+    "home": "Inicio",
+    "games": "Juegos",
+    "wallet": "Billetera",
+    "profile": "Perfil",
+    "settings": "Configuración",
+    "leaderboard": "Clasificación",
+    "support": "Soporte"
+  },
+  "auth": {
+    "login": "Iniciar Sesión",
+    "logout": "Cerrar Sesión",
+    "connectWallet": "Conectar Billetera",
+    "verifyWithWorldId": "Verificar con World ID",
+    "loginWithWorldApp": "Iniciar con World App",
+    "notLoggedIn": "No has iniciado sesión",
+    "pleaseLogin": "Por favor inicia sesión para continuar"
+  },
+  "games": {
+    "title": "Juegos",
+    "subtitle": "Elige tu juego y empieza a ganar",
+    "practiceMode": "Modo Práctica",
+    "realMode": "Modo Real",
+    "slots": {
+      "title": "Tragamonedas",
+      "description": "Gira los carretes para multiplicar hasta 100x"
+    },
+    "blackjack": {
+      "title": "Blackjack",
+      "description": "Clásico 21 - Vence al crupier"
+    },
+    "aviator": {
+      "title": "Aviator",
+      "description": "¡Retira antes de que el avión se estrelle!"
+    },
+    "coinflip": {
+      "title": "Lanzar Moneda",
+      "description": "50/50 - ¿Cara o Cruz?"
+    },
+    "dice": {
+      "title": "Dados",
+      "description": "Predice mayor o menor para ganar"
+    },
+    "roulette": {
+      "title": "Ruleta",
+      "description": "Estilo europeo - Apuesta a rojo, negro o verde"
+    },
+    "mines": {
+      "title": "Minas",
+      "description": "¡Descubre gemas, evita las minas!"
+    },
+    "comingSoon": "Próximamente",
+    "poker": {
+      "title": "Poker",
+      "description": "Texas Hold'em próximamente"
+    }
+  },
+  "betting": {
+    "betAmount": "Cantidad de Apuesta",
+    "minBet": "Apuesta Mín",
+    "maxBet": "Apuesta Máx",
+    "placeBet": "Apostar",
+    "spin": "Girar",
+    "flip": "Lanzar",
+    "roll": "Tirar",
+    "hit": "Pedir",
+    "stand": "Plantarse",
+    "double": "Doblar",
+    "split": "Dividir",
+    "cashOut": "Retirar",
+    "autoCashOut": "Retiro Automático",
+    "insufficientBalance": "Saldo insuficiente",
+    "selectCurrency": "Seleccionar Moneda",
+    "potentialWin": "Ganancia Potencial",
+    "multiplier": "Multiplicador"
+  },
+  "wallet": {
+    "title": "Billetera",
+    "balance": "Saldo",
+    "deposit": "Depositar",
+    "withdraw": "Retirar",
+    "transactions": "Transacciones",
+    "noTransactions": "Sin transacciones aún",
+    "pending": "Pendiente",
+    "completed": "Completado",
+    "failed": "Fallido",
+    "amount": "Cantidad",
+    "currency": "Moneda",
+    "enterAmount": "Ingresa la cantidad",
+    "depositSuccess": "¡Depósito exitoso!",
+    "withdrawSuccess": "¡Retiro solicitado!",
+    "exportHistory": "Exportar Historial"
+  },
+  "profile": {
+    "title": "Perfil",
+    "stats": "Estadísticas",
+    "totalWagered": "Total Apostado",
+    "totalWon": "Total Ganado",
+    "gamesPlayed": "Juegos Jugados",
+    "netProfit": "Ganancia Neta",
+    "memberSince": "Miembro Desde",
+    "lastLogin": "Último Acceso"
+  },
+  "leaderboard": {
+    "title": "Clasificación",
+    "subtitle": "¡Compite con otros jugadores por la gloria!",
+    "daily": "Diario",
+    "weekly": "Semanal",
+    "monthly": "Mensual",
+    "allTime": "Histórico",
+    "rank": "Posición",
+    "player": "Jugador",
+    "wagered": "Apostado",
+    "profit": "Ganancia",
+    "noRankings": "Sin clasificaciones este período",
+    "playToRank": "¡Juega para aparecer en la clasificación!"
+  },
+  "bonuses": {
+    "title": "Bonos",
+    "activeBonuses": "Bonos Activos",
+    "availableBonuses": "Bonos Disponibles",
+    "claimBonus": "Reclamar Bono",
+    "promoCode": "Código Promocional",
+    "enterCode": "Ingresa el código",
+    "apply": "Aplicar",
+    "wageringProgress": "Progreso de Apuesta",
+    "wageringRequired": "Apuesta Requerida",
+    "expiresIn": "Expira en",
+    "noBonuses": "No hay bonos disponibles"
+  },
+  "responsibleGambling": {
+    "title": "Juego Responsable",
+    "description": "Establece límites para mantener el control",
+    "depositLimits": "Límites de Depósito",
+    "daily": "Diario",
+    "weekly": "Semanal",
+    "monthly": "Mensual",
+    "lossLimits": "Límites de Pérdida",
+    "sessionTimeLimit": "Límite de Tiempo de Sesión",
+    "minutes": "minutos",
+    "selfExclusion": "Autoexclusión",
+    "selfExclusionDesc": "Bloquéate temporalmente de jugar",
+    "coolOff": "Período de Enfriamiento",
+    "coolOffDesc": "Toma un descanso por unos días",
+    "helpline": "¿Necesitas ayuda? Llama al 1-800-522-4700"
+  },
+  "settings": {
+    "title": "Configuración",
+    "language": "Idioma",
+    "notifications": "Notificaciones",
+    "emailNotifications": "Notificaciones por Email",
+    "pushNotifications": "Notificaciones Push",
+    "sound": "Sonido",
+    "soundEffects": "Efectos de Sonido",
+    "theme": "Tema",
+    "darkMode": "Modo Oscuro"
+  },
+  "support": {
+    "title": "Soporte",
+    "faq": "Preguntas Frecuentes",
+    "contactUs": "Contáctanos",
+    "email": "Correo",
+    "liveChat": "Chat en Vivo",
+    "helpCenter": "Centro de Ayuda"
+  },
+  "errors": {
+    "generic": "Algo salió mal. Por favor intenta de nuevo.",
+    "network": "Error de red. Por favor verifica tu conexión.",
+    "unauthorized": "Por favor inicia sesión para continuar.",
+    "notFound": "No encontrado.",
+    "serverError": "Error del servidor. Por favor intenta más tarde.",
+    "invalidAmount": "Por favor ingresa una cantidad válida.",
+    "betTooLow": "La apuesta es muy baja.",
+    "betTooHigh": "La apuesta es muy alta."
+  }
+}

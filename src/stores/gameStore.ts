@@ -1,9 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+export type GameType = 'slots' | 'blackjack' | 'prediction' | 'aviator' | 'coinflip' | 'dice' | 'roulette' | 'mines';
+
 export interface GameResult {
   id: string;
-  game: 'slots' | 'blackjack' | 'prediction';
+  game: GameType;
   betAmount: number;
   currency: 'wld' | 'usdc';
   outcome: 'win' | 'lose' | 'push';
@@ -17,7 +19,7 @@ export interface GameResult {
 // Pending game for crash protection
 export interface PendingGame {
   id: string;
-  game: 'slots' | 'blackjack' | 'prediction';
+  game: GameType;
   betAmount: number;
   currency: 'wld' | 'usdc';
   timestamp: number;
@@ -25,11 +27,11 @@ export interface PendingGame {
 }
 
 interface GameState {
-  currentGame: 'slots' | 'blackjack' | 'prediction' | null;
+  currentGame: GameType | null;
   isPlaying: boolean;
   results: GameResult[];
   pendingGame: PendingGame | null;
-  setCurrentGame: (game: 'slots' | 'blackjack' | 'prediction' | null) => void;
+  setCurrentGame: (game: GameType | null) => void;
   setIsPlaying: (playing: boolean) => void;
   addResult: (result: GameResult) => void;
   clearResults: () => void;

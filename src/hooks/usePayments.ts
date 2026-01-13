@@ -142,18 +142,23 @@ export function usePayments() {
    */
   const withdraw = useCallback(
     async (amount: number, token: 'WLD' | 'USDC'): Promise<PaymentResult> => {
-      const transactionId = crypto.randomUUID();
+      const localTransactionId = crypto.randomUUID();
       const tokenKey = token.toLowerCase() as 'wld' | 'usdc';
+
+      // Check if user is logged in
+      if (!user?.address) {
+        return { success: false, error: 'Please login to withdraw' };
+      }
 
       // Check if user has enough balance locally first
       const currentBalance = useUserStore.getState().balance;
       if (currentBalance[tokenKey] < amount) {
-        return { success: false, error: 'Insufficient balance' };
+        return { success: false, error: `Insufficient ${token} balance` };
       }
 
-      // Create pending transaction record
+      // Create pending transaction record locally
       const pendingTransaction: Transaction = {
-        id: transactionId,
+        id: localTransactionId,
         type: 'withdraw',
         amount,
         currency: tokenKey,
@@ -165,14 +170,14 @@ export function usePayments() {
       try {
         setIsProcessing(true);
 
+        // Call the withdraw API - it will check database balance and process
         const response = await fetch('/api/payment/withdraw', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             amount: amount.toString(),
             token,
-            userId: user?.address || 'guest',
-            toAddress: user?.address || 'guest',
+            toAddress: user.address,
           }),
         });
 
@@ -181,24 +186,25 @@ export function usePayments() {
           throw new Error(result.error || 'Withdrawal failed');
         }
 
-        // Subtract from local balance on success
+        // Subtract from local balance on success (database already updated)
         subtractBalance(tokenKey, amount);
 
-        // Update transaction as completed
-        updateTransaction(transactionId, {
+        // Update local transaction as completed
+        updateTransaction(localTransactionId, {
           status: 'completed',
-          transactionHash: result.transactionId,
+          transactionHash: result.withdrawalId || result.transactionId,
         });
 
         return {
           success: true,
           transactionId: result.transactionId,
+          transactionHash: result.withdrawalId,
         };
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Withdrawal failed';
 
-        // Update transaction as failed
-        updateTransaction(transactionId, {
+        // Update local transaction as failed
+        updateTransaction(localTransactionId, {
           status: 'failed',
           errorMessage: message,
         });

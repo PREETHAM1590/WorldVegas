@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="chipGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6"/>
+      <stop offset="50%" style="stop-color:#A78BFA"/>
+      <stop offset="100%" style="stop-color:#7C3AED"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F5D77A"/>
+      <stop offset="50%" style="stop-color:#D4AF37"/>
+      <stop offset="100%" style="stop-color:#B8860B"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Outer glow -->
+  <circle cx="50" cy="50" r="48" fill="none" stroke="#8B5CF6" stroke-width="1" opacity="0.5" filter="url(#glow)"/>
+
+  <!-- Main chip body -->
+  <circle cx="50" cy="50" r="45" fill="url(#chipGrad)"/>
+
+  <!-- Gold ring -->
+  <circle cx="50" cy="50" r="38" fill="none" stroke="url(#goldGrad)" stroke-width="4"/>
+
+  <!-- Chip edge notches -->
+  <g fill="url(#goldGrad)">
+    <rect x="47" y="2" width="6" height="10" rx="2"/>
+    <rect x="47" y="88" width="6" height="10" rx="2"/>
+    <rect x="2" y="47" width="10" height="6" rx="2"/>
+    <rect x="88" y="47" width="10" height="6" rx="2"/>
+    <rect x="14" y="14" width="8" height="6" rx="2" transform="rotate(45 18 17)"/>
+    <rect x="78" y="14" width="8" height="6" rx="2" transform="rotate(-45 82 17)"/>
+    <rect x="14" y="80" width="8" height="6" rx="2" transform="rotate(-45 18 83)"/>
+    <rect x="78" y="80" width="8" height="6" rx="2" transform="rotate(45 82 83)"/>
+  </g>
+
+  <!-- Inner circle -->
+  <circle cx="50" cy="50" r="30" fill="#1A1A2E"/>
+
+  <!-- W letter with neon effect -->
+  <text x="50" y="62" font-family="Arial Black, sans-serif" font-size="32" font-weight="900" fill="url(#goldGrad)" text-anchor="middle" filter="url(#glow)">W</text>
+
+  <!-- Cyan accent glow on W -->
+  <text x="50" y="62" font-family="Arial Black, sans-serif" font-size="32" font-weight="900" fill="none" stroke="#06B6D4" stroke-width="0.5" text-anchor="middle" opacity="0.6">W</text>
+</svg>
