@@ -5,17 +5,11 @@ import crypto from 'crypto';
 // Store pending payments in memory (use Redis/database in production)
 const pendingPayments = new Map<string, { amount: string; token: string; userId: string; createdAt: number }>();
 
-export interface InitPaymentResult {
+interface InitPaymentResult {
   success: boolean;
   paymentId?: string;
   error?: string;
 }
-
-// Token addresses on World Chain
-const TOKEN_ADDRESSES = {
-  WLD: '0x2cFc85d8E48F8EAB294be644d9E25C3030863003', // WLD on World Chain
-  USDC: '0x79A02482A880bCE3F13e09Da970dC34db4CD24d1', // USDC on World Chain
-} as const;
 
 export async function POST(request: NextRequest): Promise<NextResponse<InitPaymentResult>> {
   try {
@@ -128,5 +122,3 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
     );
   }
 }
-
-export { TOKEN_ADDRESSES };

@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
 import {
   MiniAppVerifyActionSuccessPayload,
   verifyCloudProof,
   IVerifyResponse,
-  VerificationLevel
 } from '@worldcoin/minikit-js';
 import {
   checkRateLimit,
@@ -13,23 +11,15 @@ import {
   createSecureResponse,
   createErrorResponse,
   isValidWorldIDProof,
-  isValidHexString,
 } from '@/lib/security';
+import { VERIFY_ACTIONS } from '@/lib/constants';
 
-export interface VerifyActionResult {
+interface VerifyActionResult {
   success: boolean;
   nullifierHash?: string;
   verificationLevel?: string;
   error?: string;
 }
-
-// Action IDs for different verification contexts
-// These must match EXACTLY what you created in the Developer Portal
-export const VERIFY_ACTIONS = {
-  LOGIN: 'world-vegas-login',
-  HIGH_STAKES: 'world-vegas-highstakes',
-  WITHDRAWAL: 'world-vegas-withdrawal',
-} as const;
 
 // Store used nullifier hashes to prevent replay (use database in production)
 const usedNullifiers = new Map<string, { action: string; timestamp: number }>();
