@@ -30,7 +30,7 @@ export default function WalletPage() {
   const { showToast } = useToast();
 
   const [modalType, setModalType] = useState<ModalType>(null);
-  const [amount, setAmount] = useState(10);
+  const [amount, setAmount] = useState(0.1);
   const [currency, setCurrency] = useState<'wld' | 'usdc'>('usdc');
 
   const handleTransaction = async () => {
@@ -257,9 +257,9 @@ export default function WalletPage() {
 
               {/* Amount Selection */}
               <div className="mb-6">
-                <label className="block text-sm text-white/60 mb-2">Amount</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {[5, 10, 25, 50, 100, 250, 500, 1000].map((a) => (
+                <label className="block text-sm text-white/60 mb-2">Amount (min 0.1)</label>
+                <div className="grid grid-cols-4 gap-2 mb-3">
+                  {[0.1, 0.5, 1, 5, 10, 25, 50, 100].map((a) => (
                     <button
                       key={a}
                       onClick={() => setAmount(a)}
@@ -273,6 +273,22 @@ export default function WalletPage() {
                       {a}
                     </button>
                   ))}
+                </div>
+                {/* Custom Amount Input */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0.1"
+                    step="0.1"
+                    value={amount}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      if (!isNaN(val) && val >= 0.1) setAmount(val);
+                    }}
+                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-primary-500 transition-colors"
+                    placeholder="Custom amount"
+                  />
+                  <span className="text-white/60 uppercase text-sm font-medium">{currency}</span>
                 </div>
               </div>
 

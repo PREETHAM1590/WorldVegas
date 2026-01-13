@@ -312,23 +312,43 @@ export function SlotsGame() {
             </div>
 
             {/* Bet Amount */}
-            <div className="flex justify-center gap-2 flex-wrap">
-              {BET_AMOUNTS.map((amount) => (
-                <button
-                  key={amount}
-                  onClick={() => setBetAmount(amount)}
-                  disabled={isSpinning}
-                  className={cn(
-                    'px-3 py-1.5 rounded-lg font-medium text-sm transition-all',
-                    betAmount === amount
-                      ? 'bg-gold-500 text-casino-dark'
-                      : 'bg-white/5 text-white/60 hover:bg-white/10',
-                    'disabled:opacity-50'
-                  )}
-                >
-                  {amount}
-                </button>
-              ))}
+            <div className="space-y-2">
+              <div className="flex justify-center gap-2 flex-wrap">
+                {BET_AMOUNTS.map((amount) => (
+                  <button
+                    key={amount}
+                    onClick={() => setBetAmount(amount)}
+                    disabled={isSpinning}
+                    className={cn(
+                      'px-3 py-1.5 rounded-lg font-medium text-sm transition-all',
+                      betAmount === amount
+                        ? 'bg-gold-500 text-casino-dark'
+                        : 'bg-white/5 text-white/60 hover:bg-white/10',
+                      'disabled:opacity-50'
+                    )}
+                  >
+                    {amount}
+                  </button>
+                ))}
+              </div>
+              {/* Custom Bet Input */}
+              <div className="flex justify-center">
+                <div className="flex items-center gap-2 max-w-[200px]">
+                  <input
+                    type="number"
+                    min="0.1"
+                    step="0.1"
+                    value={betAmount}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      if (!isNaN(val) && val >= 0.1) setBetAmount(val);
+                    }}
+                    disabled={isSpinning}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-white text-sm text-center placeholder-white/30 focus:outline-none focus:border-gold-500 transition-colors disabled:opacity-50"
+                    placeholder="Custom"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Spin Button */}
