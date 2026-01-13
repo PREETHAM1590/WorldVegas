@@ -1,0 +1,318 @@
+'use client';
+
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  ArrowDownToLine,
+  ArrowUpFromLine,
+  History,
+  ChevronRight,
+  Coins,
+  DollarSign,
+  X
+} from 'lucide-react';
+import { Header } from '@/components/navigation/Header';
+import { BottomNav } from '@/components/navigation/BottomNav';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { useUserStore } from '@/stores/userStore';
+import { useGameStore } from '@/stores/gameStore';
+import { usePayments } from '@/hooks/usePayments';
+import { useToast } from '@/components/ui/Toast';
+import { formatCurrency, cn } from '@/lib/utils';
+
+type ModalType = 'deposit' | 'withdraw' | null;
+
+export default function WalletPage() {
+  const { balance } = useUserStore();
+  const { results } = useGameStore();
+  const { deposit, withdraw, isProcessing } = usePayments();
+  const { showToast } = useToast();
+
+  const [modalType, setModalType] = useState<ModalType>(null);
+  const [amount, setAmount] = useState(10);
+  const [currency, setCurrency] = useState<'wld' | 'usdc'>('usdc');
+
+  const handleTransaction = async () => {
+    if (modalType === 'deposit') {
+      const result = await deposit(amount, currency.toUpperCase() as 'WLD' | 'USDC');
+      if (result.success) {
+        showToast(`Deposited ${amount} ${currency.toUpperCase()}`, 'success');
+        setModalType(null);
+      } else {
+        showToast(result.error || 'Deposit failed', 'error');
+      }
+    } else if (modalType === 'withdraw') {
+      const result = await withdraw(amount, currency.toUpperCase() as 'WLD' | 'USDC');
+      if (result.success) {
+        showToast(`Withdrew ${amount} ${currency.toUpperCase()}`, 'success');
+        setModalType(null);
+      } else {
+        showToast(result.error || 'Withdrawal failed', 'error');
+      }
+    }
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen pb-24">
+      <Header />
+
+      <div className="flex-1 px-4 py-6">
+        {/* Balance Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Card className="p-6 mb-6 relative overflow-hidden">
+            {/* Background Effects */}
+            <div className="absolute inset-0 opacity-30">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500 rounded-full blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-gold-500 rounded-full blur-3xl" />
+            </div>
+
+            <div className="relative">
+              <p className="text-white/60 text-sm mb-1">Total Balance</p>
+              <div className="flex items-baseline gap-3 mb-6">
+                <h2 className="text-4xl font-bold">
+                  ${formatCurrency(balance.usdc + balance.wld * 2.5)}
+                </h2>
+                <span className="text-white/40 text-sm">USD</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-white/5 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-6 h-6 rounded-full bg-primary-500/20 flex items-center justify-center">
+                      <Coins className="w-3.5 h-3.5 text-primary-400" />
+                    </div>
+                    <span className="text-white/60 text-xs">WLD</span>
+                  </div>
+                  <p className="text-xl font-bold">{formatCurrency(balance.wld)}</p>
+                </div>
+
+                <div className="bg-white/5 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-6 h-6 rounded-full bg-teal-500/20 flex items-center justify-center">
+                      <DollarSign className="w-3.5 h-3.5 text-teal-400" />
+                    </div>
+                    <span className="text-white/60 text-xs">USDC</span>
+                  </div>
+                  <p className="text-xl font-bold">{formatCurrency(balance.usdc)}</p>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="primary"
+                  className="flex-1"
+                  onClick={() => setModalType('deposit')}
+                >
+                  <ArrowDownToLine className="w-4 h-4" />
+                  Deposit
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="flex-1"
+                  onClick={() => setModalType('withdraw')}
+                >
+                  <ArrowUpFromLine className="w-4 h-4" />
+                  Withdraw
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Recent Activity */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold">Recent Activity</h2>
+            <button className="flex items-center gap-1 text-sm text-primary-400">
+              <History className="w-4 h-4" />
+              View All
+            </button>
+          </div>
+
+          {results.length === 0 ? (
+            <Card className="p-8 text-center">
+              <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-3">
+                <History className="w-6 h-6 text-white/30" />
+              </div>
+              <p className="text-white/50 text-sm">No activity yet</p>
+              <p className="text-white/30 text-xs">Play games to see your history</p>
+            </Card>
+          ) : (
+            <div className="space-y-2">
+              {results.slice(0, 10).map((result) => (
+                <Card key={result.id} className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={cn(
+                          'w-10 h-10 rounded-xl flex items-center justify-center',
+                          result.outcome === 'win'
+                            ? 'bg-teal-500/20'
+                            : result.outcome === 'push'
+                            ? 'bg-white/10'
+                            : 'bg-red-500/20'
+                        )}
+                      >
+                        {result.game === 'slots' && '🎰'}
+                        {result.game === 'blackjack' && '🃏'}
+                        {result.game === 'prediction' && '📊'}
+                      </div>
+                      <div>
+                        <p className="font-medium capitalize">{result.game}</p>
+                        <p className="text-xs text-white/50">
+                          Bet: {result.betAmount} {result.currency.toUpperCase()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p
+                        className={cn(
+                          'font-bold',
+                          result.outcome === 'win'
+                            ? 'text-teal-400'
+                            : result.outcome === 'push'
+                            ? 'text-white/60'
+                            : 'text-red-400'
+                        )}
+                      >
+                        {result.outcome === 'win'
+                          ? `+${formatCurrency(result.payout)}`
+                          : result.outcome === 'push'
+                          ? '0'
+                          : `-${formatCurrency(result.betAmount)}`}
+                      </p>
+                      <p className="text-xs text-white/40">
+                        {new Date(result.timestamp).toLocaleTimeString()}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </motion.div>
+      </div>
+
+      {/* Transaction Modal */}
+      <AnimatePresence>
+        {modalType && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm"
+            onClick={() => setModalType(null)}
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="w-full max-w-lg bg-casino-card rounded-t-3xl p-6 safe-area-bottom"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Handle */}
+              <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mb-6" />
+
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold capitalize">{modalType}</h2>
+                <button
+                  onClick={() => setModalType(null)}
+                  className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Currency Selection */}
+              <div className="flex gap-2 mb-6">
+                {(['wld', 'usdc'] as const).map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setCurrency(c)}
+                    className={cn(
+                      'flex-1 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2',
+                      currency === c
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-white/5 text-white/60 hover:bg-white/10'
+                    )}
+                  >
+                    {c === 'wld' ? (
+                      <Coins className="w-4 h-4" />
+                    ) : (
+                      <DollarSign className="w-4 h-4" />
+                    )}
+                    {c.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+
+              {/* Amount Selection */}
+              <div className="mb-6">
+                <label className="block text-sm text-white/60 mb-2">Amount</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[5, 10, 25, 50, 100, 250, 500, 1000].map((a) => (
+                    <button
+                      key={a}
+                      onClick={() => setAmount(a)}
+                      className={cn(
+                        'py-2 rounded-lg text-sm font-medium transition-all',
+                        amount === a
+                          ? 'bg-gold-500 text-casino-dark'
+                          : 'bg-white/5 text-white/60 hover:bg-white/10'
+                      )}
+                    >
+                      {a}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Current Balance */}
+              {modalType === 'withdraw' && (
+                <div className="bg-white/5 rounded-xl p-4 mb-6">
+                  <p className="text-sm text-white/60">Available Balance</p>
+                  <p className="text-xl font-bold">
+                    {formatCurrency(balance[currency])} {currency.toUpperCase()}
+                  </p>
+                </div>
+              )}
+
+              {/* Action Button */}
+              <Button
+                variant={modalType === 'deposit' ? 'primary' : 'secondary'}
+                size="lg"
+                onClick={handleTransaction}
+                isLoading={isProcessing}
+                disabled={modalType === 'withdraw' && balance[currency] < amount}
+                className="w-full"
+              >
+                {modalType === 'deposit' ? (
+                  <>
+                    <ArrowDownToLine className="w-5 h-5" />
+                    Deposit {amount} {currency.toUpperCase()}
+                  </>
+                ) : (
+                  <>
+                    <ArrowUpFromLine className="w-5 h-5" />
+                    Withdraw {amount} {currency.toUpperCase()}
+                  </>
+                )}
+              </Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <BottomNav />
+    </div>
+  );
+}
