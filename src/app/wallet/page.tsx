@@ -309,7 +309,7 @@ export default function WalletPage() {
               </div>
 
               {/* Action Button - Fixed at bottom */}
-              <div className="p-6 pt-4 pb-8 border-t border-white/10">
+              <div className="p-6 pt-4 pb-24 border-t border-white/10">
                 <Button
                   variant={modalType === 'deposit' ? 'primary' : 'secondary'}
                   size="lg"
